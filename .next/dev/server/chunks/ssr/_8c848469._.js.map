@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": [],
+  "sections": [
+    {"offset": {"line": 4, "column": 0}, "map": {"version":3,"sources":["file:///C:/Users/xylitol/ari-preview-editor/app/layout.tsx"],"sourcesContent":["import type { Metadata } from \"next\";\n// ▼ CSS読み込み（ここが命綱です）\nimport \"./globals.css\";\n\nexport const metadata: Metadata = {\n  title: \"Ari-no-Ana Neo Editor\",\n  description: \"Realtime Markdown Editor\",\n};\n\nexport default function RootLayout({\n  children,\n}: Readonly<{\n  children: React.ReactNode;\n}>) {\n  return (\n    <html lang=\"ja\">\n      {/* ▼ フォント設定を明示的に指定 */}\n      <body style={{ fontFamily: 'sans-serif' }} className=\"antialiased bg-white text-gray-900\">\n        {children}\n      </body>\n    </html>\n  );\n}"],"names":[],"mappings":";;;;;;;;;AAIO,MAAM,WAAqB;IAChC,OAAO;IACP,aAAa;AACf;AAEe,SAAS,WAAW,EACjC,QAAQ,EAGR;IACA,qBACE,8OAAC;QAAK,MAAK;kBAET,cAAA,8OAAC;YAAK,OAAO;gBAAE,YAAY;YAAa;YAAG,WAAU;sBAClD;;;;;;;;;;;AAIT"}},
+    {"offset": {"line": 41, "column": 0}, "map": {"version":3,"sources":["file:///C:/Users/xylitol/ari-preview-editor/node_modules/next/src/server/route-modules/app-page/vendored/rsc/react-jsx-dev-runtime.ts"],"sourcesContent":["module.exports = (\n  require('../../module.compiled') as typeof import('../../module.compiled')\n).vendored['react-rsc']!.ReactJsxDevRuntime\n"],"names":["module","exports","require","vendored","ReactJsxDevRuntime"],"mappings":"AAAAA,OAAOC,OAAO,GACZC,QAAQ,4HACRC,QAAQ,CAAC,YAAY,CAAEC,kBAAkB","ignoreList":[0]}}]
+}
