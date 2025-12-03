@@ -1,47 +1,51 @@
 # GitHub Actions の名前
 name: Deploy Next.js site to Pages
 
-# ワークフローが実行されるタイミング
 on:
-  # mainブランチにプッシュされたときに実行
   push:
     branches: ["main"]
-  # Actionsタブから手動で実行することも可能
   workflow_dispatch:
 
-# ワークフローに与える権限
 permissions:
   contents: read
   pages: write
   id-token: write
 
-# デプロイ環境の並列実行を制御
 concurrency:
   group: "pages"
   cancel-in-progress: false
 
 jobs:
-  # ビルドジョブ
   build:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      # --- ここから変更点 ---
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9 # 使用しているpnpmのバージョンに合わせてください
+
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: "20"
-          cache: "npm"
+          cache: "pnpm" # npm -> pnpm に変更
+
       - name: Install dependencies
-        run: npm ci
+        run: pnpm install --frozen-lockfile # npm ci -> pnpm install に変更
+
       - name: Build with Next.js
-        run: npm run build
+        run: pnpm build # npm run build -> pnpm build (一貫性のため)
+      # --- ここまで変更点 ---
+
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
           path: ./out
 
-  # デプロイジョブ
   deploy:
     environment:
       name: github-pages
