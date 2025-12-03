@@ -28,7 +28,7 @@ export default function Home() {
       
       {/* ヘッダー */}
       <header className="h-14 flex items-center px-6 border-b border-gray-300 bg-white shrink-0">
-        <h1 className="font-bold text-lg text-gray-800">Ari-no-Ana Neo Editor</h1>
+        <h1 className="font-bold text-lg text-gray-800">文章アリの穴NEO リアルタイムプレビューエディタ</h1>
         <span className="ml-4 text-xs font-medium text-gray-500 bg-gray-100 px-2 py-1 rounded border border-gray-200">
           Left Aligned
         </span>
