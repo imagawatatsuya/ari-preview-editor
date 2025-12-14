@@ -25,7 +25,7 @@ const BLOCKED_PATTERNS: RegExp[] = [
 
 // テキスト内のhttpsリンクを検出して<a>タグに変換する関数
 const renderTextWithLinks = (text: string) => {
-  // 空白・"・<・> を区切り文字として認識
+  // 空白・"・<・> を区切り文字として認識a
   const parts = text.split(/(https:\/\/[^\s"<>]+)/g);
 
   return (
