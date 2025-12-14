@@ -11,13 +11,14 @@ const DEFAULT_TEXT = `ここはリアルタイムプレビューエディタで�
 
 URLの自動リンク機能もあります。
 https://google.com はリンクになりますが、
-設定されたブロックリストにより https://example.com はリンクになりません。
+設定されたブロックリストにより https://example.com はリンクになりません。[^hoge]
 
-脚注のテストです[^1]。
+脚注のテストです[^2]。
 文末に脚注が表示されます。
 
-[^1]: ここに脚注の内容が入ります。リンクも有効です。
-https://github.com
+[^1]: ここに脚注の内容が入ります。
+［^hoge］：数字以外も脚注に変換できます
+[^2]: ここに脚注の内容が入ります。リンクも有効です。https://github.com
 `;
 
 export default function Home() {
