@@ -88,14 +88,14 @@ export const FootnoteRenderer: React.FC<FootnoteRendererProps> = ({ content }) =
 
     const footnotesMap = new Map<string, string>();
     const footnoteOrder: string[] = [];
-    
+
     const cleanedContent = normalizedContent.replace(
-      /^\s*\[\^(.+?)\]:\s*(.*(?:\n(?!\s*\[\^.+?\]:).*)*)/gm,
-      (_, id, text) => {
-        footnotesMap.set(id.trim(), text.trim());
+      /^\[\^(.+?)\]:\s*(.*(?:\n(?!\[\^.+?\]:).*)*)/gm,
+       (_, id, text) => {
+        footnotesMap.set(id.trim(), text);
         return '';
-      }
-    ).trim();
+       }
+    );
 
     cleanedContent.replace(/\[\^(.+?)\]/g, (_, id) => {
       const trimmedId = id.trim();
@@ -154,7 +154,7 @@ export const FootnoteRenderer: React.FC<FootnoteRendererProps> = ({ content }) =
 
   return (
     <div className="footnote-container">
-      <div className="leading-relaxed">
+      <div className="leading-relaxed" style={{ whiteSpace: 'pre-wrap' }}>
         {renderContent()}
       </div>
       
