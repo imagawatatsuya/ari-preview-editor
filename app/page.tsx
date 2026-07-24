@@ -1,7 +1,9 @@
 'use client';
 
-import React, { useState } from 'react';
-import { FootnoteRenderer } from '@/components/FootnoteRenderer';
+import React, { useState, useEffect } from 'react';
+import { FootnoteRenderer, FootnoteMode } from '@/components/FootnoteRenderer';
+
+const FOOTNOTE_MODE_KEY = 'ari_footnote_mode';
 
 const DEFAULT_TEXT = `ここはリアルタイムプレビューエディタです。
 設定を修正し、左寄せで表示されるようにしました。
@@ -23,6 +25,21 @@ https://google.com はリンクになりますが、
 
 export default function Home() {
   const [content, setContent] = useState<string>(DEFAULT_TEXT);
+  const [footnoteMode, setFootnoteMode] = useState<FootnoteMode>('scroll');
+  const [showSettings, setShowSettings] = useState(false);
+
+  // localStorage から設定を読み込み
+  useEffect(() => {
+    const saved = localStorage.getItem(FOOTNOTE_MODE_KEY);
+    if (saved === 'tooltip' || saved === 'scroll') {
+      setFootnoteMode(saved);
+    }
+  }, []);
+
+  const handleModeChange = (mode: FootnoteMode) => {
+    setFootnoteMode(mode);
+    localStorage.setItem(FOOTNOTE_MODE_KEY, mode);
+  };
 
   return (
     <main className="flex flex-col h-screen w-full bg-gray-50 text-gray-900 font-sans">
@@ -30,10 +47,40 @@ export default function Home() {
       {/* ヘッダー */}
       <header className="h-14 flex items-center px-6 border-b border-gray-300 bg-white shrink-0">
         <h1 className="font-bold text-lg text-gray-800">文章アリの穴NEO リアルタイムプレビューエディタ</h1>
-        <span className="ml-4 text-xs font-medium text-gray-500 bg-gray-100 px-2 py-1 rounded border border-gray-200">
-          Left Aligned
-        </span>
+        <button
+          className="ml-4 text-xs font-medium text-gray-600 bg-gray-100 px-2 py-1 rounded border border-gray-300 hover:bg-gray-200 cursor-pointer"
+          onClick={() => setShowSettings(!showSettings)}
+        >
+          ⚙ 設定
+        </button>
       </header>
+
+      {/* 管理者設定パネル */}
+      {showSettings && (
+        <div className="px-6 py-3 bg-amber-50 border-b border-amber-200 shrink-0">
+          <div className="flex items-center gap-4 text-sm">
+            <span className="font-bold text-gray-700">脚注クリック動作:</span>
+            <label className="flex items-center gap-1 cursor-pointer">
+              <input
+                type="radio"
+                name="footnoteMode"
+                checked={footnoteMode === 'scroll'}
+                onChange={() => handleModeChange('scroll')}
+              />
+              <span>スクロール</span>
+            </label>
+            <label className="flex items-center gap-1 cursor-pointer">
+              <input
+                type="radio"
+                name="footnoteMode"
+                checked={footnoteMode === 'tooltip'}
+                onChange={() => handleModeChange('tooltip')}
+              />
+              <span>ツールチップ</span>
+            </label>
+          </div>
+        </div>
+      )}
 
       {/* エディタエリア */}
       <div className="flex-1 flex overflow-hidden">
@@ -58,9 +105,8 @@ export default function Home() {
             Realtime Preview
           </div>
           <div className="flex-1 w-full h-full overflow-y-auto p-6">
-            {/* ▼▼▼ ここを修正しました（max-w-none にして中央寄せを解除） ▼▼▼ */}
-            <div className="prose prose-sm max-w-none break-all">
-              <FootnoteRenderer content={content} />
+            <div className="article-body">
+              <FootnoteRenderer content={content} footnoteMode={footnoteMode} />
             </div>
           </div>
         </div>

@@ -1,7 +1,10 @@
-import React, { useMemo, Fragment } from 'react';
+import React, { useMemo, useState, useRef, useEffect, useCallback, Fragment } from 'react';
+
+export type FootnoteMode = 'scroll' | 'tooltip';
 
 type FootnoteRendererProps = {
   content: string;
+  footnoteMode?: FootnoteMode;
 };
 
 // =====================================================================
@@ -61,7 +64,7 @@ const renderTextWithLinks = (text: string) => {
                 href={url} 
                 target="_blank" 
                 rel="noopener noreferrer"
-                className="text-blue-600 hover:underline break-all"
+                className="body-link"
               >
                 {url}
               </a>
@@ -76,7 +79,37 @@ const renderTextWithLinks = (text: string) => {
   );
 };
 
-export const FootnoteRenderer: React.FC<FootnoteRendererProps> = ({ content }) => {
+export const FootnoteRenderer: React.FC<FootnoteRendererProps> = ({ content, footnoteMode = 'scroll' }) => {
+  const [activeTooltip, setActiveTooltip] = useState<{ index: number; text: string; x: number; y: number } | null>(null);
+  const tooltipRef = useRef<HTMLDivElement>(null);
+
+  // ツールチップ外クリックで閉じる
+  useEffect(() => {
+    if (!activeTooltip) return;
+    const handleClickOutside = (e: MouseEvent) => {
+      if (tooltipRef.current && !tooltipRef.current.contains(e.target as Node)) {
+        setActiveTooltip(null);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [activeTooltip]);
+
+  const handleFootnoteClick = useCallback((e: React.MouseEvent, footnoteIndex: number, footnoteText: string) => {
+    e.preventDefault();
+    if (footnoteMode === 'tooltip') {
+      const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+      setActiveTooltip({
+        index: footnoteIndex,
+        text: footnoteText,
+        x: rect.left,
+        y: rect.bottom + 6,
+      });
+    } else {
+      document.getElementById(`footnote-${footnoteIndex}`)?.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [footnoteMode]);
+
   const { mainContent, footnotes } = useMemo(() => {
     if (!content) return { mainContent: '', footnotes: [] };
 
@@ -114,8 +147,9 @@ export const FootnoteRenderer: React.FC<FootnoteRendererProps> = ({ content }) =
     return { mainContent: cleanedContent, footnotes: notes };
   }, [content]);
 
-  const renderContent = () => {
-    const parts = mainContent.split(/(\[\^.+?\])/g);
+  // 段落内のインラインコンテンツ（脚注参照 + リンク + <br>改行）を描画
+  const renderInline = (text: string) => {
+    const parts = text.split(/(\[\^.+?\])/g);
     return parts.map((part, index) => {
       const match = part.match(/\[\^(.+?)\]/);
       if (match) {
@@ -126,11 +160,8 @@ export const FootnoteRenderer: React.FC<FootnoteRendererProps> = ({ content }) =
             <sup key={index} id={`footnote-ref-${footnote.index}`}>
               <a 
                 href={`#footnote-${footnote.index}`}
-                className="text-red-600 font-bold ml-0.5 no-underline hover:underline"
-                onClick={(e) => {
-                  e.preventDefault();
-                  document.getElementById(`footnote-${footnote.index}`)?.scrollIntoView({ behavior: 'smooth' });
-                }}
+                className="footnote-ref-link"
+                onClick={(e) => handleFootnoteClick(e, footnote.index, footnote.text)}
               >
                 [{footnote.index}]
               </a>
@@ -138,7 +169,7 @@ export const FootnoteRenderer: React.FC<FootnoteRendererProps> = ({ content }) =
           );
         }
       }
-      // 通常テキスト
+      // 通常テキスト: 単一\nは<br>で改行
       return (
         <Fragment key={index}>
           {part.split('\n').map((line, i) => (
@@ -152,22 +183,49 @@ export const FootnoteRenderer: React.FC<FootnoteRendererProps> = ({ content }) =
     });
   };
 
+  // 本文を段落（空行区切り）に分割し、<p>要素として描画
+  const renderContent = () => {
+    const paragraphs = mainContent.split(/\n\n+/).filter(p => p.trim() !== '');
+    return paragraphs.map((para, idx) => (
+      <p key={idx} className={idx > 0 ? 'gyoukan' : undefined}>
+        {renderInline(para)}
+      </p>
+    ));
+  };
+
   return (
     <div className="footnote-container">
-      <div className="leading-relaxed" style={{ whiteSpace: 'pre-wrap' }}>
+      <div className="article-paragraphs">
         {renderContent()}
       </div>
+
+      {/* ツールチップ表示 */}
+      {activeTooltip && footnoteMode === 'tooltip' && (
+        <div
+          ref={tooltipRef}
+          className="footnote-tooltip"
+          style={{ left: activeTooltip.x, top: activeTooltip.y }}
+        >
+          <div className="footnote-tooltip-header">
+            <span>脚注 {activeTooltip.index}</span>
+            <button onClick={() => setActiveTooltip(null)} aria-label="閉じる">×</button>
+          </div>
+          <div className="footnote-tooltip-body">
+            {renderTextWithLinks(activeTooltip.text)}
+          </div>
+        </div>
+      )}
       
       {footnotes.length > 0 && (
-        <div className="mt-8 pt-4 border-t border-gray-400">
-          <p className="font-bold text-sm mb-2 text-[#800000]">脚注</p>
-          <ol className="list-decimal pl-5 text-sm text-gray-700">
+        <div className="footnote-section">
+          <p className="footnote-heading">脚注</p>
+          <ol className="footnote-list">
             {footnotes.map(note => (
-              <li key={note.index} id={`footnote-${note.index}`} className="mb-1 pl-1">
+              <li key={note.index} id={`footnote-${note.index}`}>
                 {renderTextWithLinks(note.text)}{' '}
                 <a 
                   href={`#footnote-ref-${note.index}`} 
-                  className="no-underline text-blue-600 hover:text-red-600 cursor-pointer ml-1"
+                  className="footnote-back-link"
                   onClick={(e) => {
                     e.preventDefault();
                     document.getElementById(`footnote-ref-${note.index}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
