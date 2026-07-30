@@ -1,3 +1,7 @@
+/**
+ * 脚注・本文レンダラー（正: ari-no-ana-neo）
+ * ari-preview-editor へは GitHub Actions で自動同期
+ */
 import React, { useMemo, useState, useRef, useEffect, useCallback, Fragment } from 'react';
 
 export type FootnoteMode = 'scroll' | 'tooltip';
@@ -12,15 +16,8 @@ type FootnoteRendererProps = {
 // 以下の正規表現のいずれかにマッチするURLは、リンクにならず黒文字のまま表示されます。
 // =====================================================================
 const BLOCKED_PATTERNS: RegExp[] = [
-  // 1. "example" ドメインを含むものを全ブロック (.com, .net, .org など全て)
-  // 例: https://example.com, https://example.net/page, https://www.example.org
   /^https:\/\/(www\.)?example\.[a-z]+(\/|$)/,
-
-  // 2. 具体的な危険ドメインの部分一致（サブドメインも含む）
-  // 例: https://bad-site.com, https://phishing.bad-site.com
   /bad-site\.com/,
-
-  // 3. ローカルホストやプライベートIP（誤ってリンク化させないため）
   /^https:\/\/localhost/,
   /^https:\/\/192\.168\./,
   /^https:\/\/10\./,
@@ -28,7 +25,6 @@ const BLOCKED_PATTERNS: RegExp[] = [
 
 // テキスト内のhttpsリンクを検出して<a>タグに変換する関数
 const renderTextWithLinks = (text: string) => {
-  // 空白・"・<・> を区切り文字として認識
   const parts = text.split(/(https:\/\/[^\s"<>]+)/g);
 
   return (
@@ -38,7 +34,6 @@ const renderTextWithLinks = (text: string) => {
           let url = part;
           let suffix = '';
           
-          // 末尾の除外対象記号（句読点など）を判定
           const invalidSuffixRegex = /[。、.,)\]\}!?:;"'）］｝><]$/;
           
           while (url.length > 8 && invalidSuffixRegex.test(url)) {
@@ -46,8 +41,6 @@ const renderTextWithLinks = (text: string) => {
             url = url.slice(0, -1);
           }
 
-          // 【修正】ブロックリスト（正規表現）によるチェック
-          // 登録されたパターンのいずれかにマッチした場合、リンク化を中止します
           const isBlocked = BLOCKED_PATTERNS.some(pattern => pattern.test(url));
 
           if (isBlocked) {
@@ -72,7 +65,6 @@ const renderTextWithLinks = (text: string) => {
             </Fragment>
           );
         }
-        // 通常テキスト
         return <Fragment key={index}>{part}</Fragment>;
       })}
     </>
@@ -83,7 +75,6 @@ export const FootnoteRenderer: React.FC<FootnoteRendererProps> = ({ content, foo
   const [activeTooltip, setActiveTooltip] = useState<{ index: number; text: string; x: number; y: number } | null>(null);
   const tooltipRef = useRef<HTMLDivElement>(null);
 
-  // ツールチップ外クリックで閉じる
   useEffect(() => {
     if (!activeTooltip) return;
     const handleClickOutside = (e: MouseEvent) => {
@@ -147,7 +138,6 @@ export const FootnoteRenderer: React.FC<FootnoteRendererProps> = ({ content, foo
     return { mainContent: cleanedContent, footnotes: notes };
   }, [content]);
 
-  // 段落内のインラインコンテンツ（脚注参照 + リンク + <br>改行）を描画
   const renderInline = (text: string) => {
     const parts = text.split(/(\[\^.+?\])/g);
     return parts.map((part, index) => {
@@ -169,7 +159,6 @@ export const FootnoteRenderer: React.FC<FootnoteRendererProps> = ({ content, foo
           );
         }
       }
-      // 通常テキスト: 単一\nは<br>で改行
       return (
         <Fragment key={index}>
           {part.split('\n').map((line, i) => (
@@ -183,7 +172,6 @@ export const FootnoteRenderer: React.FC<FootnoteRendererProps> = ({ content, foo
     });
   };
 
-  // 本文を段落（空行区切り）に分割し、<p>要素として描画
   const renderContent = () => {
     const paragraphs = mainContent.split(/\n\n+/).filter(p => p.trim() !== '');
     return paragraphs.map((para, idx) => (
