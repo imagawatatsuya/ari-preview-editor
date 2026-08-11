@@ -3,11 +3,14 @@
  * ari-preview-editor へは GitHub Actions で自動同期
  */
 import React, { useMemo, useState, useRef, useEffect, useCallback, Fragment } from 'react';
+import type { ReaderIndentMode } from '../types';
+import { formatReaderBody } from '../services/jisageAdapter';
 
 export type FootnoteMode = 'scroll' | 'tooltip';
 
 type FootnoteRendererProps = {
   content: string;
+  indentMode?: ReaderIndentMode;
   footnoteMode?: FootnoteMode;
 };
 
@@ -71,7 +74,7 @@ const renderTextWithLinks = (text: string) => {
   );
 };
 
-export const FootnoteRenderer: React.FC<FootnoteRendererProps> = ({ content, footnoteMode = 'scroll' }) => {
+export const FootnoteRenderer: React.FC<FootnoteRendererProps> = ({ content, indentMode = 'none', footnoteMode = 'scroll' }) => {
   const [activeTooltip, setActiveTooltip] = useState<{ index: number; text: string; x: number; y: number } | null>(null);
   const tooltipRef = useRef<HTMLDivElement>(null);
 
@@ -135,8 +138,10 @@ export const FootnoteRenderer: React.FC<FootnoteRendererProps> = ({ content, foo
       text: footnotesMap.get(id) || '',
     }));
 
-    return { mainContent: cleanedContent, footnotes: notes };
-  }, [content]);
+    // Footnote definitions are removed before applying jisage. This keeps the
+    // footnote parser stable and ensures footnote text is never indented.
+    return { mainContent: formatReaderBody(cleanedContent, indentMode), footnotes: notes };
+  }, [content, indentMode]);
 
   const renderInline = (text: string) => {
     const parts = text.split(/(\[\^.+?\])/g);
